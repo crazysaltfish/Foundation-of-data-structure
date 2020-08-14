@@ -1,0 +1,189 @@
+#include<stdio.h>
+#include<malloc.h>
+#define MAXSIZE 125
+#define MAXRC 125
+#define elemtype int
+typedef struct 
+{
+	int i,j;
+	elemtype e;
+}Triple;
+
+typedef struct 
+{
+	Triple data[MAXSIZE+1];
+	int mu,nu,tu;
+	int rpos[MAXRC+1];
+}TSMatrix;
+
+void insertMatrix(TSMatrix &T)
+{
+	printf("请输入行数,列数,非零元个数:\n");
+	scanf("%d %d %d",&T.mu,&T.nu,&T.tu);
+	printf("请输入非零元:\n");
+	for( int p=1;p<=T.tu;p++)
+	{
+		scanf("%d %d %d",&T.data[p].i,&T.data[p].j,&T.data[p].e);
+	}
+}
+
+void printMatrix(TSMatrix &T)
+{
+	printf("矩阵为\ni j e\n");
+	for( int p=1;p<=T.tu;p++)
+	{
+		printf("%d %d %d\n",T.data[p].i,T.data[p].j,T.data[p].e);
+	}
+}
+
+void addMatrix(TSMatrix T,TSMatrix M,TSMatrix &D)
+{
+	int p=1,q=1,n=1;
+	D.tu=0;D.mu=T.mu;D.nu=T.nu;
+	while(p<=T.tu&&q<=M.tu)
+	{
+		if(T.data[p].i<=M.data[q].i)
+		{
+		if(T.data[p].i==M.data[q].i&&T.data[p].j==M.data[q].j)
+		{
+			D.data[n].i=T.data[p].i;
+			D.data[n].j=T.data[p].j;
+			D.data[n].e=T.data[p].e+M.data[q].e;
+			p++;q++;n++;D.tu++;
+		}
+		else 
+		{
+			D.data[n].i=T.data[p].i;
+			D.data[n].j=T.data[p].j;
+			D.data[n].e=T.data[p].e;
+			p++;n++;D.tu++;
+		}
+		}//if
+	    else
+		{
+            D.data[n].i=M.data[q].i;
+			D.data[n].j=M.data[q].j;
+			D.data[n].e=M.data[q].e;
+			q++;n++;D.tu++;
+		}
+	}//while
+	while(p<=T.tu)
+	{
+            D.data[n].i=T.data[p].i;
+			D.data[n].j=T.data[p].j;
+			D.data[n].e=T.data[p].e;
+			p++;n++;D.tu++;
+	}
+	while(q<=M.tu)
+	{
+		    D.data[n].i=M.data[q].i;
+			D.data[n].j=M.data[q].j;
+			D.data[n].e=M.data[q].e;
+			q++;n++;D.tu++;
+	}
+}//addMatrix
+
+void FastTransposeSMatrix(TSMatrix M, TSMatrix &T)
+ {  
+  // 采用三元组顺序表存储表示，求稀疏矩阵M的转置矩阵T
+  int col, t, p, q;
+  int num[20], cpot[20];
+  T.mu = M.nu;  T.nu = M.mu;  T.tu = M.tu;
+  if (T.tu) 
+  {
+    for (col=1; col<=M.nu; ++col) num[col] = 0;
+    for (t=1; t<=M.tu; ++t) // 求 M 中每一列所含非零元的个数
+       ++num[M.data[t].j];
+    cpot[1] = 1;         
+    // 求 M 中每一列的第一个非零元在 b.data 中的序号
+    for (col=2; col<=M.nu; ++col) cpot[col] = cpot[col-1]+num[col-1];
+    for (p=1; p<=M.tu; ++p)
+	{    
+      col = M.data[p].j;   q = cpot[col];
+      T.data[q].i =M.data[p].j;  T.data[q].j =M.data[p].i;
+      T.data[q].e =M.data[p].e;  ++cpot[col]; 
+    } // for
+  } // if
+} // FastTransposeSMatrix
+
+void initrpos(TSMatrix &T)
+{
+  int col, t;
+  int num[20];
+  for (col=1; col<=T.mu; ++col) num[col] = 0;
+    for (t=1; t<=T.tu; ++t) // 求 M 中每一列所含非零元的个数
+       ++num[T.data[t].i];
+    T.rpos[1] = 1;         
+    // 求 M 中每一列的第一个非零元在 b.data 中的序号
+    for (col=2; col<=T.mu; ++col) T.rpos[col] = T.rpos[col-1]+num[col-1];
+}
+
+
+
+void MultSMatrix(TSMatrix M, TSMatrix N, TSMatrix &Q) 
+{  
+  // 求矩阵乘积Q=M*N.
+  int arow,brow,p,q,t,ctemp[30],l,ccol,tp;
+  Q.mu = M.mu; Q.nu = N.nu; Q.tu = 0;       // Q初始化
+  if (M.tu*N.tu != 0)
+  {   // Q是非零矩阵
+    for (arow=1; arow<=M.mu; ++arow) 
+	{      // 处理M的每一行
+      for (l=1; l<=M.nu; ++l) ctemp[l] = 0; // 当前行各元素累加器清零
+      Q.rpos[arow] = Q.tu+1; 
+      if (arow<M.mu) tp=M.rpos[arow+1];
+      else tp=M.tu+1;
+      for (p=M.rpos[arow]; p<tp;++p) 
+	  { // 对当前行中每一个非零元    
+        brow=M.data[p].j;          // 找到对应元在N中的行号
+        if (brow < N.mu ) t = N.rpos[brow+1];
+        else t = N.tu+1;
+        for (q=N.rpos[brow];  q< t;  ++q) 
+		{
+          ccol = N.data[q].j;            // 乘积元素在Q中列号
+          ctemp[ccol] += M.data[p].e * N.data[q].e;
+        } // for q
+      } // 求得Q中第crow( =arow)行的非零元
+      for (ccol=1; ccol<=Q.nu; ++ccol) // 压缩存储该行非零元
+        if (ctemp[ccol]) 
+		{ 
+          Q.data[Q.tu+1].i=arow;
+          Q.data[Q.tu+1].j=ccol;
+          Q.data[Q.tu+1].e=ctemp[ccol];
+		  Q.tu++;
+        } // if
+    } // for arow
+  } // if   
+} // MultSMatrix
+
+
+
+void main()
+{
+	TSMatrix T,M,D,F;
+
+	insertMatrix(T);
+	printMatrix(T);
+	insertMatrix(M);
+	printMatrix(M);
+
+	addMatrix(T,M,D);
+	printMatrix(D);
+
+	FastTransposeSMatrix(M,F);
+	printf("转置后");
+	printMatrix(F);
+
+	
+	
+	TSMatrix G;
+	initrpos(T);
+	initrpos(M);
+	printMatrix(T);
+	printMatrix(M);
+	MultSMatrix(T,M,G);
+	printf("相乘后");
+	printMatrix(G);
+
+
+}

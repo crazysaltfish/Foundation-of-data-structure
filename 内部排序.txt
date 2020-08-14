@@ -1,0 +1,191 @@
+#include "iostream.h"
+#include <stdio.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <time.h>
+#define ElemType int
+typedef struct{
+   ElemType *elem;
+   int length;
+}SSTable;
+
+void CreateTable(SSTable &Table)
+{
+	cout<<"请输入表的长度:";
+	int length;
+	cin>>length;
+	Table.elem = (ElemType *)malloc((length+1)*sizeof(ElemType));
+	Table.length = length;
+}
+
+int PosSame(SSTable Table,int num,int cell)
+{
+	int flag = 0;
+   for(int i = 1; i < num; i++)
+   {
+      if(Table.elem[i] == cell)
+	  {
+		  flag = 1;
+		  break;
+	  }
+   }
+   return flag;
+}
+
+void SetData(SSTable &Table)
+{
+	srand((unsigned)time(NULL));
+	for(int i = 1; i <= Table.length; i++)
+	{  
+		Table.elem[i] = rand()%Table.length;
+       if(PosSame(Table,i,Table.elem[i]))
+	   {
+		   i--;
+	   }
+	}
+}
+
+void TraverseData(SSTable Table)
+{
+	for(int i = 1; i <= Table.length; i++){
+		cout<<Table.elem[i]<<"  ";
+		if(i % 10 == 0)
+			cout<<endl;
+	}
+
+	cout<<endl;
+}
+
+void quicksort(int left,int right,int *a)
+{ 
+   int i,j,t,temp;
+   if(left>right) return;
+   temp=a[left];
+   i=left;j=right;
+   static lenth=right;
+   while(i!=j)
+{ 
+	   while(*(a+j)>=temp&&i<j)     
+       j--;
+    
+       while(*(a+i)<=temp&&i<j)
+          i++;  
+    if(i<j)
+    {  
+     t=*(a+i);  
+     *(a+i)=*(a+j); 
+     *(a+j)=t;
+    }
+}
+
+  *(a+left)=*(a+i);
+  *(a+i)=temp;
+
+  for(int k = 1; k <= lenth ; k++){
+		cout<<a[k]<<"  ";
+		if(k % 10 == 0)
+			cout<<endl;
+	}
+
+	cout<<endl;
+quicksort(left,i-1,a);
+
+quicksort(i+1,right,a);
+}
+
+void InsertSort(SSTable &Table)
+{
+	for(int i = 2; i <= Table.length; i++)
+	{
+		if(Table.elem[i] < Table.elem[i-1])
+		{
+			Table.elem[0] = Table.elem[i];
+			Table.elem[i] = Table.elem[i-1];
+			for(int j = i - 2; Table.elem[0] < Table.elem[j]; j--)
+		       Table.elem[j+1] = Table.elem[j];
+			Table.elem[j+1] = Table.elem[0];
+		}
+	}
+}
+
+void ShellSort(int ins,SSTable &Table)
+{
+	int i;
+    if(ins != 0){
+	for(i = 1; i + ins <= Table.length; i ++)
+	{
+		if(Table.elem[i] >= Table.elem[i+ins]) //交换
+		{
+			Table.elem[0] = Table.elem[i];
+			Table.elem[i] = Table.elem[i+ins];
+			Table.elem[i+ins] = Table.elem[0];
+		}
+		TraverseData(Table);
+
+	}
+	ShellSort(ins/2,Table);
+	}else
+	{
+       InsertSort(Table);
+	   TraverseData(Table);
+	}
+    
+	
+}
+
+void HeapAdjust(SSTable &Table,int s,int m)
+{
+	ElemType rc;
+	rc = Table.elem[s];
+	for(int j = 2*s; j <= m; j*=2)
+	{
+		if(j<m && Table.elem[j] < Table.elem[j+1])  ++j;
+		if(!(rc < Table.elem[j]))  break;
+		Table.elem[s] = Table.elem[j];
+		s = j;   //记录被交换的下标 为s 
+	}
+	Table.elem[s] = rc;
+	
+}
+
+void HeapSort(SSTable &Table)
+{
+	int i;
+	for(i = Table.length/2; i > 0; i--)
+	{
+		HeapAdjust(Table,i,Table.length);
+	}
+	TraverseData(Table);  //新建大顶堆
+	for(i = Table.length; i > 1; --i)
+	{
+		Table.elem[0] = Table.elem[1]; //首尾交换
+		Table.elem[1] = Table.elem[i];
+		Table.elem[i] = Table.elem[0];
+
+		HeapAdjust(Table,1,i-1);     //调整大顶堆（只需调整改变了的下标）
+		TraverseData(Table);
+	}
+}
+
+void main()
+{
+	SSTable Table1,Table2,Table3;
+	CreateTable(Table1);
+	SetData(Table1);
+	TraverseData(Table1);
+	cout<<"--------快速排序--------"<<endl;
+	quicksort(1,Table1.length,Table1.elem);
+
+	CreateTable(Table2);
+	SetData(Table2);
+	TraverseData(Table2);
+	cout<<"--------希尔排序--------"<<endl;
+    ShellSort(Table2.length/2,Table2);
+
+	CreateTable(Table3);
+	SetData(Table3);
+	TraverseData(Table3);
+	cout<<"--------堆排序----------"<<endl;
+	HeapSort(Table3);
+
+}

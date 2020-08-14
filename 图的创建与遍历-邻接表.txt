@@ -1,0 +1,350 @@
+#include <stdio.h>
+#include "iostream.h"
+#include <stdlib.h>
+#include <queue>
+#define Status int
+#define MAX_VERTEX_NUM 20
+#define InfoType int
+#define VertexType char
+#define MAX 20
+
+using namespace std;
+
+bool visited[MAX];
+
+typedef enum{DG,DN,UDG,UDN} GraphKind;
+typedef struct ArcNode{
+
+	int adjvex;
+	struct ArcNode *nextarc;
+    InfoType *info;
+}ArcNode;
+
+typedef struct VNode{
+  VertexType data;
+  ArcNode *firstarc;
+}VNode,AdjList[MAX_VERTEX_NUM];
+
+typedef struct{
+   AdjList vertices;
+   int vexnum,arcnum;
+   GraphKind kind;
+}MGraph;
+
+
+int LocateVex(MGraph G,VertexType v)
+{
+	int flag = 0,locate;
+
+    for(int i = 0; i < G.vexnum; i++)
+    {
+		 if(G.vertices[i].data == v)
+		 { 
+			 flag = 1;
+			 locate = i;
+		 }
+			
+	 }
+	if(flag == 1) return locate;
+	else return -1;
+
+}
+
+
+Status CreateDN(MGraph &G)
+{
+	int IncInfo,i;
+	cout<<"请输入图的顶点数、弧数、弧是否含有信息"<<endl;
+	scanf("%1d%1d%1c",&G.vexnum,&G.arcnum,&IncInfo);
+    
+	printf("请输入%d顶点（不加空格）：",G.vexnum);
+	for( i = 0; i < G.vexnum; i++)
+	{
+		cin>>G.vertices[i].data;
+	}
+
+	for(i = 0; i< G.vexnum; i++)
+	{
+		int num;
+	    cout<<G.vertices[i].data<<"顶点相关的弧的数目及相关顶点（不加空格）:";
+		    cin>>num;
+	    G.vertices[i].firstarc = NULL;
+        VertexType data;
+		ArcNode *p,*q;
+		int location;
+		for(int j = 0; j < num; j++)
+		{
+			p = (ArcNode *)malloc(sizeof(struct ArcNode));
+			cin>>data;
+            location = LocateVex(G,data);
+			if(location != -1)  p->adjvex = location;
+			if(j == 0) G.vertices[i].firstarc = p;
+			  else q->nextarc = p;
+			q = p;
+			p->nextarc = NULL;
+		}
+	}
+	return 1;
+		
+}
+
+void DFS(MGraph G,int v)
+{
+	int w;
+	visited[v] = true;
+	cout<<G.vertices[v].data<<" ";
+	ArcNode *p;
+	p = G.vertices[v].firstarc;
+    
+	while(p != NULL)
+	{   w = p->adjvex;
+		if(!visited[w])
+			DFS(G,w);
+		p = p->nextarc;
+	}
+}
+
+void DFSTraverse(MGraph G)
+{
+	int v;
+	cout<<"深度优先遍历为：";
+	for(v = 0; v < G.vexnum; ++v)
+	        visited[v] = false;
+	for(v = 0; v < G.vexnum; ++v)
+		if(!visited[v])  
+			DFS(G,v);
+    cout<<endl;
+}
+
+void BFSTraverse(MGraph G)
+{
+	int v,u,w;
+	cout<<"广度优先遍历为:";
+	for(v = 0; v < G.vexnum; v++)
+		visited[v] = false;
+	queue<int> Q;
+	for(v = 0; v < G.vexnum; v ++)
+	{
+		if(!visited[v]){
+		   visited[v] = true;
+		   cout<<G.vertices[v].data<<" ";
+		   Q.push(v);
+		   while(!Q.empty())
+		   {
+              u = Q.front();
+			  Q.pop();
+			  ArcNode *p;
+			  p = G.vertices[u].firstarc;
+			  
+			  while(w >= 0 && p != NULL)
+			  {    w = p->adjvex;
+				  if(!visited[w]){
+				     visited[w] = true;
+					 cout<<G.vertices[w].data<<" ";
+					 Q.push(w);	
+				  } //if
+				  p = p->nextarc;
+                  if(p != NULL) w = p->adjvex;
+			  }//while
+		   }//while
+		}//if
+	}//for
+	cout<<endl;
+}
+
+Status InsertVex(MGraph &G,VertexType v)
+{
+	G.vertices[G.vexnum++].data = v;
+	int location = LocateVex(G,v);
+	G.vertices[location].firstarc = NULL;
+	return 0;
+}
+
+Status DeleteVex(MGraph &G,VertexType v)
+{
+	int location,i,j;  ArcNode *p,*q,*k;
+
+	location = LocateVex(G,v);
+    p = G.vertices[location].firstarc;
+	while(p != NULL) {
+		q = p;
+		p = p->nextarc;
+	    free(q);
+	}
+	for(i = location+1; i < G.vexnum; i ++)
+		G.vertices[i-1] = G.vertices[i];
+	G.vexnum--;
+	for(i = 0; i < G.vexnum; i ++)
+	{
+		q = p = G.vertices[i].firstarc;
+		while(p != NULL && p->adjvex != location){
+		  if(p->adjvex > location) p->adjvex--;
+		  q = p;
+		  p = p->nextarc;
+		}//while
+
+		if(p != NULL)
+		{
+			k=p->nextarc;
+			if(p == q) {G.vertices[i].firstarc = p->nextarc;free(p);}
+		  else {
+		       q->nextarc = p->nextarc;
+		       free(p);
+		  }//else
+		  while(k != NULL){
+		  if(k->adjvex > location) k->adjvex--;
+		  k = k->nextarc;
+		  }//while
+		}//if
+		
+	}//for
+
+	return 1;
+
+}
+
+Status InsertArc(MGraph &G,VertexType v,VertexType w)
+{
+	int i,j;
+
+	i = LocateVex(G,v);  j = LocateVex(G,w);
+	ArcNode *newNode;
+	newNode = new ArcNode;
+	newNode->adjvex = j;
+	newNode->nextarc = NULL;
+	ArcNode *p;
+	if(i != -1){
+	p = G.vertices[i].firstarc;
+	if(p == NULL){
+	   G.vertices[i].firstarc = newNode;
+	}else{
+	   newNode->nextarc = p->nextarc;
+	   p->nextarc = newNode;
+	   }
+       G.arcnum++;
+	   return 1;
+	}  else  return 0;
+
+	
+}
+
+Status DeleteArc(MGraph &G,VertexType v,VertexType w)
+{
+	int i,j;
+
+	i = LocateVex(G,v);  j = LocateVex(G,w);
+
+	ArcNode *p,*q;
+	p = G.vertices[i].firstarc;
+
+	if(p == NULL)  return 0;
+	else{
+		q = p;
+		while(p != NULL && p->adjvex != j){
+		   q = p;
+		   p = p->nextarc;
+		}//while
+
+		if(p == q) {
+		  G.vertices[i].firstarc = p->nextarc;
+		  free(p);
+		}//if
+		else {
+		  q->nextarc = p->nextarc;
+		  free(p);
+		}//else
+	}//else
+
+	G.arcnum--;
+}
+
+Status PrintArcs(MGraph G)
+{
+	int i; ArcNode *p = NULL;
+	for(i = 0; i < G.vexnum; i++)
+	{
+		cout<<G.vertices[i].data;
+		p = G.vertices[i].firstarc;
+		while(p != NULL){
+			cout<<"->"<<G.vertices[p->adjvex].data;
+			p = p->nextarc;
+		}
+		cout<<endl;
+	}
+    return 1;
+}
+
+void Operation_InsertVex(MGraph &G)
+{
+	cout<<"请输入插入的顶点数据:";
+	VertexType data;
+	cin>>data;
+	InsertVex(G,data);
+	PrintArcs(G);
+}
+
+void Operation_DeleteVex(MGraph &G)
+{
+    cout<<"请输入要删除的顶点:";
+	VertexType vex;
+	cin>>vex;
+	DeleteVex(G,vex);
+	PrintArcs(G);
+
+}
+
+void Operation_InsertArc(MGraph &G)
+{
+	cout<<"请输入要插入的弧:";
+    VertexType vex1,vex2;
+	cin>>vex1>>vex2;
+	InsertArc(G,vex1,vex2);
+	PrintArcs(G);
+}
+
+void Operation_DeleteArc(MGraph &G)
+{
+    cout<<"请输入删除的弧的相关顶点:";
+	VertexType vex1,vex2;
+	cin>>vex1>>vex2;
+	DeleteArc(G,vex1,vex2);
+	PrintArcs(G);
+}
+
+void GraphOperation(MGraph &G)
+{
+	int step;
+	while(step != EOF){
+		cout<<"----请选择图的操作:----"<<endl;
+		cout<<"---1、插入顶点 2、删除顶点---"<<endl;
+		cout<<"---3、插入弧   4、删除弧  ---"<<endl;
+		cin>>step;
+	switch (step)
+	{
+	case 1:
+      Operation_InsertVex(G);
+	  break;
+	case 2:
+      Operation_DeleteVex(G);
+	  break;
+	case 3:
+      Operation_InsertArc(G);
+	  break;
+	case 4:
+      Operation_DeleteArc(G);
+	  break;
+	}//switch
+	}//while
+
+}
+
+void main()
+{
+	MGraph map1;
+	CreateDN(map1);
+    BFSTraverse(map1);
+	DFSTraverse(map1);
+	PrintArcs(map1);
+
+	GraphOperation(map1);
+}	 

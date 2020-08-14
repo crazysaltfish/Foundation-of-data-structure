@@ -1,0 +1,130 @@
+#include<stdio.h>
+#include<malloc.h>
+#define TYPE struct student
+#define LEN sizeof(struct student)
+struct student
+{
+	int num;
+	int age;
+	struct student *next;
+};
+TYPE *creat(int n)
+{
+	TYPE *head,*pb,*pf;int i;
+	for(i=0;i<n;i++)
+	{
+	pb=(TYPE*)malloc(LEN);
+	printf("iuput Num and Age\n");
+	scanf("%d%d",&pb->num,&pb->age);
+	if(i==0) pf=head=pb;
+	else pf->next=pb;
+	pb->next=NULL;
+	pf=pb;
+	}
+	return(head);
+}
+int display(TYPE *head)
+{
+	TYPE *ps;int i=1;
+	ps=head;
+	printf("\nOutput linked list's students:\n\n");
+	while(ps!=NULL)
+	{
+	printf("NO %d Number:%d,Age: %d\n",i,ps->num,ps->age);
+	ps=ps->next;
+	}
+	printf("\n");
+	return i-1;
+}
+TYPE *add(TYPE *head,int x,int y)
+{
+	TYPE *n,*p=head;
+	n=(TYPE *)malloc(LEN);
+	while(p->next!=NULL) p=p->next;
+	p->next=n;
+	n->num=x;n->age=y;n->next=NULL;
+	return head;
+}
+TYPE *delet(TYPE *head,int x)
+{
+	TYPE *m,*p=head;
+	while(p!=NULL&&p->num!=x) {m=p;p=p->next;}
+	if(p->num==x)
+	{
+		m->next=p->next;
+		free(p);
+	}
+	return head;
+}
+void AorD(TYPE *head)
+{
+	int x=-1,n,a;
+	while(x!=0)
+	{
+		printf("Please input a number 0 or 1 or 2 or 3\n 0:close 1:scan 2:add 3:delete\n");
+		scanf("%d",&x);
+		if(x==1) display(head);
+		if(x==2) 
+		{
+			printf("Please input a number and age to add in\n");
+			scanf("%d%d",&n,&a);
+			add(head,n,a);
+			display(head);
+		}
+		if(x==3)
+		{
+			printf("Please input a number to delete\n");
+			scanf("%d",&n);
+			delet(head,n);
+			display(head);
+		}
+	}
+}
+void unio(TYPE *L1,TYPE *L2,TYPE *L3)
+{
+	TYPE *pa=L1,*pb=L2,*pc=L3;int i;
+	while(pa!=NULL)
+	{
+		add(pc,pa->num,pa->age);
+		pa=pa->next;
+	}
+	while(pb!=NULL)
+	{
+		i=1;pa=L1;
+		while(pa!=NULL&&i)
+		{
+			if(pb->age==pa->age) i=0;
+			pa=pa->next;
+		}
+		if(i) add(pc,pb->num,pb->age);
+		pb=pb->next;
+	}
+}
+void merge(TYPE *L1,TYPE *L2,TYPE *L3)
+{
+	
+	TYPE *pa=L1,*pb=L2,*pc=L3;
+	while(pa&&pb)
+	{
+		if(pa->age<=pb->age) {pc->next=pa;pc=pa;pa=pa->next;}
+		else{pc->next=pb;pc=pb;pb=pb->next;}
+	}
+	pc->next=pa?pa:pb;
+}
+void main()
+{
+	int i;TYPE *La,*Lb,*Lc;
+	printf("请输入一个数字初始链表La的长度:\n");
+	scanf("%d",&i);
+	La=creat(i);
+	AorD(La);
+	printf("请输入一个数字初始链表Lb的长度:\n");
+	scanf("%d",&i);
+	Lb=creat(i);
+	AorD(Lb);
+	Lc=(TYPE*)malloc(LEN);Lc->next=NULL;
+	unio(La,Lb,Lc);
+	display(Lc->next);
+	merge(La,Lb,Lc);
+	display(Lc->next);
+}

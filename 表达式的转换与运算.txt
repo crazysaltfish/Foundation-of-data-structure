@@ -1,0 +1,684 @@
+#include <stdio.h>
+#include "iostream.h"
+#include <stdlib.h>
+#include <string.h>
+#define SElemType char
+#define SElemTypefloat float
+#define OVERFLOW 1
+#define ERROR 0
+#define OK 1
+#define STACK_INIT_SIZE 100
+#define STACKINCREMENT 10
+
+typedef struct {
+      SElemType *base;
+	  SElemType *top;
+	  int stacksize;
+
+}SqStack;
+
+typedef struct {
+      SElemTypefloat *base;
+	  SElemTypefloat *top;
+	  int stacksize;
+
+}SqStackfloat;
+
+int InitStack(SqStack &S){
+
+	S.base = (SElemType *)malloc(STACK_INIT_SIZE*sizeof(SElemType));
+	if(!S.base) exit(OVERFLOW);
+	S.top = S.base;
+	S.stacksize = STACK_INIT_SIZE;
+	return OK;
+
+}
+
+int InitFloatStack(SqStackfloat &S){
+
+	S.base = (SElemTypefloat *)malloc(STACK_INIT_SIZE*sizeof(SElemTypefloat));
+	if(!S.base) exit(OVERFLOW);
+	S.top = S.base;
+	S.stacksize = STACK_INIT_SIZE;
+	return OK;
+
+}
+
+int DestroyStack(SqStack &S){
+
+	free(S.base);
+	S.stacksize = 0;
+
+	return OK;
+}
+
+int ClearStack(SqStack &S){
+
+	S.top = S.base;
+	S.stacksize = 0;
+
+	return OK;
+}
+
+int StackEmpty(SqStack S){
+
+	if(S.stacksize == 0) return true;
+	else return false;
+}
+
+int StackLength(SqStack S)
+{
+	return (S.top - S.base)/sizeof(SElemType);
+}
+
+int StackLengthfloat(SqStackfloat S)
+{
+	return (S.top - S.base);
+
+}
+
+int GetTop(SqStack S,SElemType &e){
+
+	if(S.top == S.base) return ERROR;
+	e = *(S.top-1);
+	return OK;
+}
+
+int Push(SqStack &S,SElemType e){
+
+	if(S.top - S.base >= S.stacksize) {
+	
+		S.base = (SElemType *)realloc (S.base,
+			        (S.stacksize+STACKINCREMENT)*sizeof(SElemType));
+		if(!S.base)  exit(OVERFLOW);
+
+		S.top = S.base + S.stacksize;
+	}
+
+	*S.top++ = e;
+	return OK;
+}
+
+int floatPush(SqStackfloat &S,SElemTypefloat e){
+
+	if(S.top - S.base >= S.stacksize) {
+	
+		S.base = (SElemTypefloat *)realloc (S.base,
+			        (S.stacksize+STACKINCREMENT)*sizeof(SElemTypefloat));
+		if(!S.base)  exit(OVERFLOW);
+
+		S.top = S.base + S.stacksize;
+	}
+
+	*S.top++ = e;
+	return OK;
+}
+
+void doPush(SqStack &S){
+
+	int num;
+	cout<<"请输入入栈的元素数目：";
+	cin>>num;
+    cout<<"请输入元素：";
+	while(num>0){
+		SElemType data;
+		cin>>data;
+		Push(S,data);
+
+		num--;
+	}
+}
+
+int Pop(SqStack &S,SElemType &e){
+
+	if(S.top == S.base) return ERROR;
+	e = * --S.top;
+	return OK;
+}
+
+void allPop(SqStack &S)
+{
+	int length;
+
+	length = StackLength(S);
+
+	while(length > 0)
+	{
+		SElemType data;
+		Pop(S,data);
+
+		cout<<data<<" ";
+
+		length--;
+	}
+
+}
+
+int Popfloat(SqStackfloat &S,SElemTypefloat &e){
+
+	if(S.top == S.base) return ERROR;
+	e = * --S.top;
+	return OK;
+}
+
+void allPopfloat(SqStackfloat &S)
+{
+	int length;
+
+	length = StackLengthfloat(S);
+
+	while(length > 0)
+	{
+		SElemTypefloat data;
+		Popfloat(S,data);
+
+		cout<<data<<" ";
+
+		length--;
+	}
+
+}
+
+int StackTraverse(SqStack S){
+
+	SElemType *p; int length;
+
+	p = S.base;
+	length = StackLength(S);
+
+	while(length > 0){
+	
+		cout<<*p++<<"  ";
+		length--;
+	}
+	return OK;
+}
+
+int FloatStackTraverse(SqStackfloat S){
+
+	SElemTypefloat *p; int length;
+
+	p = S.base;
+	length = StackLengthfloat(S);
+
+	while(length > 0){
+	
+		cout<<*p++<<"  ";
+		length--;
+	}
+	return OK;
+}
+
+
+int In(SElemType c)
+{
+	switch(c){
+	case '+':
+	case '-':
+	case '*':
+	case '/':
+	case '(':
+	case ')':
+	case '#':  return 1;break;
+	default :  return 0;break;
+	}
+
+}
+
+char Precede(SElemType e,SElemType c)
+{
+	switch (e){
+	
+	case '+':switch(c){			 
+	         case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 case '(': return '<';break;
+			 case ')': return '>';break;
+			 case '#': return '>';break;
+			 }  break;
+	case '-':switch(c){
+			 case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 case '(': return '<';break;
+			 case ')': return '>';break;
+			 case '#': return '>';break;
+			 }   break;
+	case '*':switch(c){
+			 case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '>';break;
+			 case '/': return '>';break;
+			 case '(': return '<';break;
+			 case ')': return '>';break;
+			 case '#': return '>';break;
+			 }   break;
+	case '/':switch(c){
+			 case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '>';break;
+			 case '/': return '>';break;
+			 case '(': return '<';break;
+			 case ')': return '>';break;
+			 case '#': return '>';break;
+			 }   break;
+	case '(':switch(c){
+			 case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 case '(': return '<';break;
+			 case ')': return '>';break;
+			 case '#':            break;
+			 }   break;
+	case ')':switch(c){
+			 case '+': return '<';break;
+			 case '-': return '<';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 case '(':            break;
+			 case ')': return '=';break;
+			 case '#': break;
+			 }   break;
+	case '#':switch(c){
+			 case '+': return '<';break;
+			 case '-': return '<';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 case '(': return '<';break;
+			 case ')':            break;
+			 case '#': return '=';break;
+			 }   break;
+	}
+
+
+}
+
+char Tprecede (SElemType e,SElemType c)
+{
+	switch (e){
+	
+	case '+':switch(c){			 
+	         case '+': return '=';break;
+			 case '-': return '=';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 }  break;
+	case '-':switch(c){
+			 case '+': return '=';break;
+			 case '-': return '=';break;
+			 case '*': return '<';break;
+			 case '/': return '<';break;
+			 }   break;
+	case '*':switch(c){
+	         case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '=';break;
+			 case '/': return '=';break;
+			 }   break;
+	case '/':switch(c){
+			 case '+': return '>';break;
+			 case '-': return '>';break;
+			 case '*': return '=';break;
+			 case '/': return '=';break;
+			 }   break;
+
+	}
+
+}
+
+float Operate(SElemTypefloat a,SElemType m,SElemTypefloat b)
+{
+	switch (m){
+		
+	case '+': return (a+b);  break;
+	case '-': return (a-b);  break;
+	case '*': return (a*b);  break;
+	case '/': return (a/b);  break;
+
+	}
+
+}
+
+void TransformToQzhui(SElemType *source)
+{
+	int sLength; 
+	SElemType sData,topData,sqData;
+	SqStack OPTR,OPND;
+
+	sLength = strlen(source);
+
+	InitStack(OPTR);   Push(OPTR,'#');
+	InitStack(OPND);
+
+	while(sLength > 0)
+	{
+		sData = source[sLength-1];
+
+		if(!In(sData)) 
+			Push(OPND,sData);
+		else {
+			switch (sData) {
+			case ')':
+				Push(OPTR,sData);
+				break;
+			case '(':
+				GetTop(OPTR,topData);
+				while(topData != ')'){
+					Pop(OPTR,sqData);
+					Push(OPND,sqData);
+					GetTop(OPTR,topData);
+				}
+				Pop(OPTR,sqData);
+				break;
+			default:
+				GetTop(OPTR,topData);
+				if(topData == '#')
+					Push(OPTR,sData);
+				else {
+					switch (Precede(sData,topData)){
+					case '>':
+					case '=':
+						Push(OPTR,sData);
+						break;
+					
+					case '<':
+                            while(Tprecede(sData,topData) == '<' && topData != '#'){
+                            Pop(OPTR,sqData);
+							Push(OPND,sqData);
+							GetTop(OPTR,topData);
+						}
+						Push(OPTR,sData);
+						break;
+					}
+
+			}
+		}
+		}
+		sLength--;
+		
+	}
+
+		sLength = StackLength(OPTR);
+		if(sLength){
+			for(int i = 1; i <= sLength-1; i ++){
+				Pop(OPTR,sqData);
+				Push(OPND,sqData);
+			}
+		}
+			
+   allPop(OPND);
+
+}
+
+void qZhuiGetResult(SElemType *source)
+{
+	int length;  
+	SElemTypefloat result,sDatafloat,sData1_float,sData2_float;
+    SElemType sData,sData1,sData2,*p;
+	SqStackfloat OPND;
+
+	length = strlen(source);
+
+	p = &source[length-1];
+	InitFloatStack(OPND);
+
+	while(length > 0)
+	{
+		sData = source[length-1];
+
+		if(!In(sData)){
+              sDatafloat = sData - '0';
+			  floatPush(OPND,sDatafloat);
+		}			
+		else{
+			Popfloat(OPND,sData1_float);
+			Popfloat(OPND,sData2_float);
+
+			result = Operate(sData1_float,sData,sData2_float);
+			floatPush(OPND,result);
+			p--;
+		}
+
+      length--;
+	}
+
+	allPopfloat(OPND);
+}
+
+
+void TransformToHzhui(SElemType *source)
+{
+	int sLength,i=0; 
+	SElemType sData,topData,sqData;
+	SqStack OPTR,OPND;
+
+	sLength = strlen(source);
+
+	InitStack(OPTR);   Push(OPTR,'#');
+	InitStack(OPND);
+
+
+	while(sLength > 0)
+	{
+		sData = source[i++];
+
+		if(!In(sData)) 
+			Push(OPND,sData);
+		else {
+			switch (sData){
+			case '(':
+				Push(OPTR,sData);
+				break;
+			case ')':
+				GetTop(OPTR,topData);
+				while(topData != '('){
+					Pop(OPTR,sqData);
+					Push(OPND,sqData);
+					GetTop(OPTR,topData);
+				}
+				Pop(OPTR,sqData);
+				break;
+			default:
+				GetTop(OPTR,topData);
+				if(topData == '#')
+					Push(OPTR,sData);
+				else {
+				switch(topData){
+					case '(':												
+						Push(OPTR,sData);
+						break;
+					default:
+						switch(Tprecede(sData,topData)){
+						
+						case '>':
+                             Push(OPTR,sData);
+							 break;
+						case '=':
+						case '<':
+							while(!(Tprecede(sData,topData) == '>') && topData != '#'){
+								Pop(OPTR,sqData);
+								Push(OPND,sqData);
+								GetTop(OPTR,topData);
+							}  
+							Push(OPTR,sData);
+							break;
+						}
+					}
+				}
+			}
+			
+		}sLength--;
+		
+	
+	}
+	sLength = StackLength(OPTR);
+		if(sLength){
+			for(int i = 1; i <= sLength-1; i ++){
+				Pop(OPTR,sqData);
+				Push(OPND,sqData);
+			}
+		}
+
+   StackTraverse(OPND);
+
+}
+
+void hZhuiGetResult(SElemType *source)
+{
+	int length;
+	SqStackfloat OPND;
+	SElemType sData,sData1,sData2,*p;
+    SElemTypefloat sDatafloat,floatsData1,floatsData2,result;
+
+	p = source;
+	length = strlen(source);
+
+	InitFloatStack(OPND);
+
+	for(int i = 1; i <= length; i ++)
+	{
+		sData = source[i-1];
+
+		if(!In(sData))
+		{
+			sDatafloat = sData - '0';
+			floatPush(OPND,sDatafloat);
+		}
+		else {			
+			Popfloat(OPND,floatsData1);
+            Popfloat(OPND,floatsData2);
+
+			result = Operate(floatsData2,sData,floatsData1);
+			floatPush(OPND,result);
+
+			p++;
+		}
+	}
+   
+	allPopfloat(OPND);
+}
+
+void zZhuiGetResult(SElemType *source)
+{
+	int length;
+    SElemTypefloat floatData,floatData1,floatData2,result;
+	SElemType ope,sData,topData;
+	SqStackfloat OPND;
+	SqStack OPTR;
+
+	length = strlen(source);
+
+	InitStack(OPTR);  Push(OPTR,'#');
+	InitFloatStack(OPND);
+
+	for(int i =1; i <= length;i++)
+	{
+		sData = source[i-1];
+
+		if(!In(sData)){
+            floatData = sData - '0';
+			floatPush(OPND,floatData);
+		}
+		else {
+			switch(sData){
+			case '(':
+				Push(OPTR,sData);
+				break;
+			case ')':
+				GetTop(OPTR,topData);
+				while(topData != '('){
+					Pop(OPTR,ope);
+					Popfloat(OPND,floatData2);
+					Popfloat(OPND,floatData1);
+					result = Operate(floatData1,ope,floatData2);
+					floatPush(OPND,result);
+					GetTop(OPTR,topData);
+				}
+				Pop(OPTR,topData);
+				break;
+			default:
+				GetTop(OPTR,topData);
+				if(topData == '#'){
+					Push(OPTR,sData);		
+				}  else{
+				switch(Tprecede(sData,topData)){				
+				case '=':
+				case '<':
+					while(!(Tprecede(sData,topData) == '>') && topData != '#'){
+						Pop(OPTR,ope);
+						Popfloat(OPND,floatData2);
+						Popfloat(OPND,floatData1);
+						result = Operate(floatData1,ope,floatData2);
+						floatPush(OPND,result);
+						GetTop(OPTR,topData);
+					}
+					Push(OPTR,sData);
+					break;
+				default:
+					Push(OPTR,sData);
+					break;
+				}
+				}
+			}
+		}
+	}
+
+	GetTop(OPTR,topData);
+
+	while(topData != '#') {
+		Pop(OPTR,ope);
+		Popfloat(OPND,floatData2);
+		Popfloat(OPND,floatData1);
+
+		result = Operate(floatData1,ope,floatData2);
+
+		floatPush(OPND,result);
+
+		GetTop(OPTR,topData);
+	}
+
+		allPopfloat(OPND);
+}
+
+
+
+int main()
+{
+
+	SElemType source[100],result[100];
+  
+	cout<<"请输入中缀表达式:";
+    
+	cin>>source;
+
+	cout<<"中缀表达式计算结果为：";
+	zZhuiGetResult(source);
+	cout<<endl;
+
+    cout<<"前缀表达式的形式为：";
+    TransformToQzhui(source);
+	cout<<endl;
+	cout<<"后缀表达式的形式为：";
+    TransformToHzhui(source);
+	cout<<endl;
+	cout<<"请输入前缀表达式：";
+	cin>>result;
+	cout<<"结果为:";
+    qZhuiGetResult(result);
+	cout<<endl;
+
+
+   
+	cout<<"请输入后缀表达式:";
+	cin>>result;
+	cout<<"结果为：";
+    hZhuiGetResult(result);
+	cout<<endl;
+
+	return 0;
+
+}

@@ -1,0 +1,114 @@
+#include<stdio.h>
+#include<malloc.h>
+#define LIST_SIZE 100
+#define LISTINCREMENT 10
+struct List 
+{
+	int * elem;
+	int length;
+	int listsize;
+}La,Lb,Lc;
+void InitList(List &L)//初始化
+{
+	L.elem=(int *)malloc(LIST_SIZE*sizeof(int));
+	if(!L.elem) return;
+	L.length=0;
+	L.listsize=LIST_SIZE;
+}
+void ListInsert(List &L,int i,int e)//插入
+{
+	int *p;
+  if (i < 1 || i > L.length+1) return ;  // i值不合法
+  if (L.length >= L.listsize)
+  {   // 当前存储空间已满，增加容量
+    int *newbase = (int *)realloc(L.elem,
+                  (L.listsize+LISTINCREMENT)*sizeof (int));
+    if (!newbase) return;   // 存储分配失败
+    L.elem = newbase;             // 新基址
+    L.listsize += LISTINCREMENT;  // 增加存储容量
+  }
+  int *q = &(L.elem[i-1]);   // q为插入位置
+  for (p = &(L.elem[L.length-1]); p>=q; --p) *(p+1) = *p;
+                                  // 插入位置及之后的元素右移
+  *q = e;       // 插入e
+  ++L.length;   // 表长增1
+}
+void ListDelete(List &L,int i,int &e)//删除
+{
+	if((i<1)||(i>L.length)) return;
+	int *p=&(L.elem[i-1]);
+	e=*p;
+	int *q=L.elem+L.length-1;
+	for(++p;p<=q;++p) *(p-1)=*p;
+	--L.length;
+}
+void ListDisplay(List L)
+{
+	int p;
+	printf("\n现在的线性表为：");
+	for(p=1;p<=L.length;L.elem++,p++) printf("%d ",*L.elem);
+	printf("\n");
+}
+void selet(List &L)//功能按键
+{
+	int x,y,i;
+	while(i!=-1)
+	{
+		printf("请输入-1 or 0 or 1 or 2:\n-1:退出  0:遍历  1:添加  2:删除\n ");
+	    scanf("%d",&i);
+		if(i==0)
+	{
+		ListDisplay(L);
+	}
+	if(i==1)
+	{
+		printf("请输入你想要插入的位置和数字：\n");
+		scanf("%d%d",&x,&y);
+		ListInsert(L,x,y);
+		ListDisplay(L);
+	}
+	if(i==2)
+	{
+		printf("请输入你想要删除的数字的位置：\n");
+		scanf("%d",&x);
+		ListDelete(L,x,y);
+		ListDisplay(L);
+	}
+	}
+}
+void Getelem(List &L,int i,int &e)
+{
+	int *p=L.elem;
+	e=p[i-1];
+}
+int compare(List L,int e)
+{
+	int *p=L.elem,i;
+	for(i=1;i<=L.length;i++)
+	{
+		if(p[i-1]==e) return 1;
+	}
+	return 0;
+}
+void unio(List L1,List L2,List &L3)
+{
+	int e;
+	for(int i=1;i<=L2.length;i++)
+	{
+		Getelem(L2,i,e);
+		if(!compare(L1,e)) ListInsert(L1,L1.length+1,e); 
+	}
+	L3=L1;
+}
+void main()
+{
+	int e,i,j;
+	printf("请为La插入数字！\n");
+	printf("提示：现在线性表为空，插入只能插入第一位！\n");
+	selet(La);
+    printf("请为Lb插入数字！\n");
+	printf("提示：现在线性表为空，插入只能插入第一位！\n");
+	selet(Lb);
+	unio(La,Lb,Lc);
+	ListDisplay(Lc);
+}

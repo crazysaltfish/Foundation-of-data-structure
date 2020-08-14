@@ -1,0 +1,292 @@
+#include "iostream.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#define ElemType int
+typedef struct{
+   ElemType *elem;
+   int length;
+}SSTable;
+
+void CreateTable(SSTable &Table)
+{
+	cout<<"请输入表的长度:";
+	int length;
+	cin>>length;
+	Table.elem = (ElemType *)malloc((length+1)*sizeof(ElemType));
+	Table.length = length;
+}
+
+int PosSame(SSTable Table,int num,int cell)
+{
+	int flag = 0;
+   for(int i = 1; i < num; i++)
+   {
+      if(Table.elem[i] == cell)
+	  {
+		  flag = 1;
+		  break;
+	  }
+   }
+   return flag;
+}
+
+void SetData(SSTable &Table)
+{
+	for(int i = 1; i <= Table.length; i++)
+	{  
+		Table.elem[i] = rand()%(Table.length+50);
+       if(PosSame(Table,i,Table.elem[i]))
+	   {
+		   i--;
+	   }
+	     system("cls"); 
+		 
+	     cout<<"进度为:"<<(double(i) / (double)Table.length)*100.0<<"%"<<endl;
+	}
+}
+
+void TraverseData(SSTable Table)/////////////////////
+{
+	for(int i = 1; i <= Table.length; i++)
+	{
+		cout<<Table.elem[i]<<"  ";
+	}
+	cout<<endl;
+
+}
+
+int Search_Seq(SSTable Table,ElemType data)
+{
+	int i = Table.length;
+	for(;i > 0 ; i --)
+	{
+		if(Table.elem[i] == data)
+			break;
+	}
+	return i;
+}
+
+void doSearch_Seq(SSTable Table)
+{
+	cout<<"请输入要查找的数据元素:";
+	int data;
+	cin>>data;
+	cout<<"元素"<<data<<"的位置为:"<<Search_Seq(Table,data)<<endl;
+}
+
+void Sort(SSTable &Table)   //排序
+{
+	int i,j,p,q,t;
+	for(i=1;i <= Table.length;i++)
+	{ 
+		p=i;q=Table.elem[i];      
+        for(j=i+1;j <= Table.length;j++) 
+        {
+        if(Table.elem[j]<q)
+		{
+            p=j;
+           q=Table.elem[p];  
+		} 
+		}
+        if(i!=p)
+		{
+     
+           t=Table.elem[i];  
+           Table.elem[i]=q;   
+           Table.elem[p]=t;
+		}
+    
+	}
+
+}
+
+int Search_Bin(SSTable Table,ElemType data)
+{
+	int low = 1, high = Table.length,mid;
+	while(low <= high)
+	{
+		mid = (low + high)/2;
+		if(Table.elem[mid] == data) break;
+		else if(Table.elem[mid] > data)  high = mid - 1;
+		else low = mid + 1;
+	}
+
+	return mid;
+}
+
+void doSearch_Bin(SSTable Table)
+{
+	Sort(Table);
+	TraverseData(Table);
+	cout<<"请输入查找的元素:";
+	int data;
+	cin>>data;
+	cout<<"元素"<<data<<"的位置为:"<<Search_Bin(Table,data)<<endl;
+}
+
+typedef struct{
+   ElemType *elem;
+   int length;
+}HashTable;
+
+void CreateHashTable(HashTable &HT)
+{
+	int length;
+	cout<<"请输入哈希表的长度:"<<endl;
+	cin>>length;
+	HT.length = length;
+    HT.elem = (ElemType *)malloc(length*sizeof(ElemType));
+	for(int j=0;j<length;j++) HT.elem[j]=-1;
+	cout<<"输入元素个数为:";
+	int num; cin>>num;
+	cout<<"请输入元素:";
+	for(int i = 0; i < num; i ++)
+	{    
+	   int data,hashdata;
+       cin>>data;
+	   hashdata = data % length;
+       while(HT.elem[hashdata] >= 0)
+		   hashdata = (hashdata+1)%length;
+	   HT.elem[hashdata] = data;
+	}
+}
+
+void TraverseHashTable(HashTable HT)////////////////
+{
+	for(int i = 1; i <= HT.length; i ++)
+	{
+		cout<<HT.elem[i-1]<<"  ";
+	}
+	cout<<endl;
+}
+
+int Search_Hash(HashTable Table,ElemType data)
+{
+	int hashdata;
+	hashdata = data % Table.length;
+	while(Table.elem[hashdata] > 0 && Table.elem[hashdata] != data)
+		hashdata = (hashdata+1)%Table.length;
+	if(Table.elem[hashdata] < 0) return -1;
+	else return hashdata+1;
+}
+
+void doSearch_Hash(HashTable Table)
+{
+	cout<<"请输入要查找的数值:";
+	int data ;
+	cin>>data;
+	cout<<"元素"<<data<<"的位置为:"<<Search_Hash(Table,data)<<endl;
+}
+
+
+/*------------分块查询------------*/
+
+
+void SetData_Div(SSTable &Table)
+{
+	cout<<"请输入分组的数目:";
+	int num;
+	cin>>num;
+	Table.length = num*10;
+    Table.elem = (ElemType *)malloc(sizeof(ElemType)*(Table.length+1));
+	for(int i = 0; i < num; i++)
+	{
+        for(int j = 0; j <10; j ++)
+		{
+			Table.elem[i*10+j] = rand()%((i+1)*10+1)+(i*10+1);
+		}
+	}
+}
+
+void TraverseDivTable(SSTable Table)///////////////
+{
+	for(int i = 1; i <= Table.length; i ++)
+	{
+		cout<<Table.elem[i-1]<<"  ";
+		if(i%10==0) cout<<"||  ";
+	}
+	cout<<endl;
+}
+
+typedef struct{
+    ElemType maxNum;
+	int position;
+}DivCell;
+
+typedef struct{
+    DivCell *elem;
+	int length;
+}DivTable;
+
+int Search_Divide(SSTable Table,ElemType data)
+{
+   DivTable divTable;  int max = -1,position=1,num=0,i;
+   divTable.elem = (DivCell *)malloc((Table.length/10)*sizeof(ElemType));
+   divTable.length = Table.length/10;
+   for(i = 1; i <= Table.length; i ++)
+   {
+	   if(Table.elem[i] > max)
+	   { 
+		   max = Table.elem[i];
+	   }
+       if(i % 10 == 0){
+	      divTable.elem[num].maxNum = max;
+		  divTable.elem[num].position = position;
+		  max = -1;
+		  num++;
+		  position = position + 10;
+	   }
+   }
+
+   for(i = 0; i < divTable.length; i ++)
+   {
+	   if(divTable.elem[i].maxNum >= data)
+	   {
+		   position = divTable.elem[i].position;
+		   break;
+	   }
+   }
+
+   int flag = 0;
+
+   for( i = position; i <= position+10; i++)
+   {
+      if(Table.elem[i] == data)
+	  {
+		  flag = 1;
+		  position = i;
+		  break;
+	  }
+   }
+
+   if(flag == 0) return -1;
+   else return position+1;
+}
+
+void doSearch_Div(SSTable Table)
+{
+	cout<<"请输入查找的元素:";
+	int data;
+	cin>>data;
+	cout<<"元素"<<data<<"的位置是:"<<Search_Divide(Table,data)<<endl;
+}
+
+void main()
+{
+   SSTable DivTable,Table;
+   CreateTable(Table);
+   SetData(Table);
+   TraverseData(Table);
+   cout<<"-----------折半查找-------------"<<endl;
+   doSearch_Bin(Table); 
+   cout<<"-----------哈希表中查找---------"<<endl;
+   HashTable HT;
+   CreateHashTable(HT);
+   TraverseHashTable(HT);
+   doSearch_Hash(HT);   
+   cout<<"-----------分块查找-------------"<<endl;
+   SetData_Div(Table);
+   TraverseDivTable(Table);
+   doSearch_Div(Table);
+}
